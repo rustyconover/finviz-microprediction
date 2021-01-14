@@ -143,7 +143,6 @@ async function pushFutures() {
 
   console.log("Would send", futures_to_send.length, "records");
 
-  await setState(Object.fromEntries(futures.map(v => [v.name, v.last_update_time])));
 
   const writes = [];
 
@@ -168,8 +167,15 @@ async function pushFutures() {
     writes.push(writer.set(`finance-futures-${clean_name}-range.json`, record.last_range));
     writes.push(writer.set(`finance-futures-${clean_name}-volume.json`, record.last_volume));
     writes.push(writer.set(`finance-futures-${clean_name}-log-return.json`, record.last_return));
+
+    try {
+      await Promise.all(writes);
+    } catch (e) {
+      console.error(e);
+    }
   }
-  await Promise.all(writes);
+  await setState(Object.fromEntries(futures.map(v => [v.name, v.last_update_time])));
+
 }
 
 export const handler: ScheduledHandler<any> = async (event) => {
