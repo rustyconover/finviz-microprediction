@@ -14,6 +14,7 @@ type FutureInfo = {
   last_volume: number,
   last_range: number,
   last_change: number,
+  last_return: number,
 };
 
 async function getFuture(ticker: string): Promise<FutureInfo> {
@@ -32,6 +33,7 @@ async function getFuture(ticker: string): Promise<FutureInfo> {
     last_volume: json.volume[json.volume.length - 1],
     last_range: json.lastHigh - json.lastLow,
     last_change: json.close[json.close.length - 1] - json.close[json.close.length - 2],
+    last_return: Math.log(json.close[json.close.length - 1]) - Math.log(json.close[json.close.length - 2]),
     name: json.name,
   }
 }
@@ -160,10 +162,12 @@ async function pushFutures() {
       .replace(/,/g, "");
     console.log("Writing", clean_name);
 
-    console.log(`${clean_name} change: ${record.last_change} range: ${record.last_range} volume: ${record.last_volume}`);
+    console.log(`${clean_name} change: ${record.last_change} range: ${record.last_range} volume: ${record.last_volume} return: ${record.last_return}`);
+
     writes.push(writer.set(`finance-futures-${clean_name}-change.json`, record.last_change));
     writes.push(writer.set(`finance-futures-${clean_name}-range.json`, record.last_range));
     writes.push(writer.set(`finance-futures-${clean_name}-volume.json`, record.last_volume));
+    writes.push(writer.set(`finance-futures-${clean_name}-log-return.json`, record.last_return));
   }
   await Promise.all(writes);
 }
